@@ -1,4 +1,5 @@
 const { md_getProd, md_addProd, md_updateProd, md_deleteProd } = require("../model/mdProduct")
+const { toRupiah } = require("../helper/helperCurrency")
 module.exports = {
     getProd: (req, res) => {
         // If isset query searchLike in URL
@@ -15,6 +16,7 @@ module.exports = {
         // Join Table Category
         const join = `LEFT JOIN tb_category ON id_category = category_product`
         md_getProd(search, order, limiter, join).then((resolve) => {
+            resolve.map(el => el.price = toRupiah(el.price))
             res.json(resolve)
         }).catch((err) => res.json(err.message))
     },

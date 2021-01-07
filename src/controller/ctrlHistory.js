@@ -18,13 +18,12 @@ module.exports = {
             let arrData = []
             for (element of resolve) {
                 const unique = (element.product_history).split(",").filter((el, i, self) => self.indexOf(el) === i)
-                console.log(unique)
                 const uniqueLength = (val) => (element.product_history).split(",").filter(el => el.indexOf(val) > -1).length
                 const date = new Date(element.date_history * 1000)
                 await md_getProdHistory(`WHERE id_product IN (${unique.join()})`).then(resolve => {
                     const namesOfProduct = resolve.map(el => { return `${el.name} x${uniqueLength(el.id)}` })
                     arrData.push({
-                        id: element.id_history,
+                        invoice: `#${element.id_history}`,
                         cashier: element.cashier_history,
                         date: `${date.getDate()} ${month(date.getMonth())} ${date.getFullYear()}`,
                         orders: namesOfProduct.join(", "),
