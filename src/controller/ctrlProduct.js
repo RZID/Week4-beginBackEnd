@@ -12,14 +12,16 @@ module.exports = {
         // Offset, if page equal to 1, the offset will be start at 0 in limit key of array
         const offset = page === 1 ? 0 : (page - 1) * limit
         const limiter = `LIMIT ${offset},${limit}`
-        md_getProd(search, order, limiter).then((resolve) => {
+        // Join Table Category
+        const join = `LEFT JOIN tb_category ON id_category = category_product`
+        md_getProd(search, order, limiter, join).then((resolve) => {
             res.json(resolve)
         }).catch((err) => res.json(err.message))
     },
     addProd: (req, res) => {
         const data = req.body
         if (!data.name || !data.price || !data.category || !data.image) {
-            res.json(`Error : You must fill all of input!`)
+            res.json({ Error: `You must fill all of input!` })
         } else {
             md_addProd(data).then((resolve) => {
                 res.json(resolve)

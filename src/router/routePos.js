@@ -3,7 +3,8 @@ const route = express.Router()
 
 // Product Controller
 const { getProd, addProd, updateProd, deleteProd } = require('../controller/ctrlProduct')
-const { getCategory } = require('../controller/ctrlCategory')
+const { getCategory, addCategory } = require('../controller/ctrlCategory')
+const { getHistory, addHistory } = require('../controller/ctrlHistory')
 
 // History Controller
 
@@ -18,5 +19,8 @@ route
     .patch('/product/:id', updateProd)
     .delete('/product/:id', deleteProd)
     .get('/category/', getCategory)
+    .post('/category/', addCategory)
+    .get('/history/', getHistory)
+    .post('/history/', addHistory)
 
 module.exports = route
