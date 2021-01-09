@@ -15,6 +15,26 @@ module.exports = {
             })
         })
     },
+    md_deleteCategory: (id) => {
+        return new Promise((resolve, reject) => {
+            conn.query(`SELECT id_category FROM tb_category WHERE id_category = '${id}'`, (err, res) => {
+                if (err) {
+                    reject(new Error(err))
+                } else {
+                    if (res.length < 1) {
+                        reject(new Error(`ID ${id} isn't exist!`))
+                    }
+                    conn.query(`DELETE FROM tb_category WHERE id_category = '${id}'`, (err) => {
+                        if (err) {
+                            reject(new Error(err))
+                        } else {
+                            resolve({ id })
+                        }
+                    })
+                }
+            })
+        })
+    },
     md_addCategory: (data) => {
         return new Promise((resolve, reject) => {
             if (!data.name) {
@@ -29,6 +49,26 @@ module.exports = {
                     }
                 })
             }
+        })
+    },
+    md_updateCategory: (data) => {
+        return new Promise((resolve, reject) => {
+            conn.query(`SELECT id_category FROM tb_category WHERE id_category = '${data.id}'`, (err, res) => {
+                if (err) {
+                    reject(new Error(err))
+                } else {
+                    if (res.length < 1) {
+                        reject(new Error(`ID ${data.id} isn't exist!`))
+                    }
+                    conn.query(`UPDATE tb_category SET name_category = '${data.name}' WHERE id_category = '${data.id}' `, (err) => {
+                        if (err) {
+                            reject(new Error(err))
+                        } else {
+                            resolve({ Updated: data.id })
+                        }
+                    })
+                }
+            })
         })
     }
 }

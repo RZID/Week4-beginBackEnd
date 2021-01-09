@@ -24,5 +24,49 @@ module.exports = {
                 }
             })
         })
+    },
+    md_deleteHistory: (id) => {
+        return new Promise((resolve, reject) => {
+            conn.query(`SELECT * FROM tb_history WHERE id_history = '${id}'`, (err, res) => {
+                if (err) {
+                    reject(new Error(err))
+                } else {
+                    if (res.length < 1) {
+                        reject(new Error(`Undefined id = ${id} in history!`))
+                    } else {
+                        conn.query(`DELETE FROM tb_history WHERE id_history = '${id}'`, err => {
+                            if (err) {
+                                reject(new Error(err))
+                            } else {
+                                resolve({ Success: `Deleted : ${id}` })
+                            }
+                        })
+                    }
+                }
+            })
+        })
+    },
+    md_updateHistory: (id, data) => {
+        return new Promise((resolve, reject) => {
+            conn.query(`SELECT * FROM tb_history WHERE id_history = ${id}`, (err, result) => {
+                if (result.length < 1 || err) {
+                    reject(new Error(`undefined ${id} in id of history`))
+                } else {
+                    let arrayData = {}
+                    // If each data exist in body
+                    data.cashier ? arrayData.cashier_history = data.cashier : ''
+                    data.product ? arrayData.product_history = data.product : ''
+                    data.amount ? arrayData.amount_history = data.amount : ''
+                    conn.query(`UPDATE tb_history SET ? WHERE id_history = ?`, [arrayData, id], (err) => {
+
+                        if (err) {
+                            reject(new Error(err))
+                        } else {
+                            resolve(id)
+                        }
+                    })
+                }
+            })
+        })
     }
 }
