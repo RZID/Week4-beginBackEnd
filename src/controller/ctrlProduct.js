@@ -14,20 +14,43 @@ module.exports = {
         const offset = page === 1 ? 0 : (page - 1) * limit
         const limiter = `LIMIT ${offset},${limit}`
         // Join Table Category
-        const join = `LEFT JOIN tb_category ON id_category = category_product`
-        md_getProd(search, order, limiter, join).then((resolve) => {
+
+        md_getProd(search, order, limiter).then((resolve) => {
             resolve.map(el => el.price = toRupiah(el.price))
             res.json(resolve)
         }).catch((err) => res.json(err.message))
     },
+    getProdDetail: (req, res) => {
+        if (!req.params.id) {
+            res.json({ Error: "ID must be inserted in URL Params!" })
+        } else {
+            const whereClause = `WHERE id_product = '${req.params.id}'`
+            md_getProd(whereClause).then((result) => {
+                if (result.length < 1) {
+                    res.json({ Error: "Requested ID isn't exist in product!" })
+                } else {
+                    md_getProd(whereClause).then((resolve) => {
+                        res.json(resolve)
+                    }).catch(err => res.json(err.message))
+                }
+            }).catch(err => res.json({ Error: err.message }))
+        }
+    },
     addProd: (req, res) => {
         const data = req.body
-        if (!data.name || !data.price || !data.category || !data.image) {
+        if (!data.name || !data.price || !data.category) {
             res.json({ Error: `You must fill all of input!` })
         } else {
             md_addProd(data).then((resolve) => {
                 res.json(resolve)
-            }).catch((err) => res.json(err.message))
+            }).catch((err) => {
+                const message = err.message.split(" ")
+                if (message[19] == "REFERENCES") {
+                    res.json({ Error: `Identity of category isn't exist!` })
+                } else {
+                    res.json({ Error: `${err.message}` })
+                }
+            })
         }
     },
     updateProd: (req, res) => {
@@ -41,6 +64,6 @@ module.exports = {
         const id = req.params.id
         md_deleteProd(id).then((resolve) => {
             res.json(resolve)
-        }).catch(err => res.json(err.message))
+        }).catch(err => res.json({ Error: err.message }))
     }
 }

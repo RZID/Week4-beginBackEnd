@@ -1,8 +1,12 @@
 const conn = require("../config/database")
 module.exports = {
-    md_getProd: (where, order, limiter, join) => {
+    md_getProd: (where, order, limiter) => {
+        where = where ? where : ""
+        order = order ? order : ""
+        limiter = limiter ? limiter : ""
+        const join = `LEFT JOIN tb_category ON id_category = category_product`
         return new Promise((resolve, reject) => {
-            conn.query(`SELECT id_product AS 'id', name_product AS 'name', price_product AS 'price', image_product AS 'image', name_category AS 'category' FROM tb_product ${join} ${where} ${order} ${limiter} `, (err, result) => {
+            conn.query(`SELECT id_product AS 'id', name_product AS 'name', price_product AS 'price', image_product AS 'image', name_category AS 'category' FROM tb_product ${join} ${where} ${order} ${limiter}`, (err, result) => {
                 if (err) {
                     reject(new Error(err))
                 } else {
@@ -13,7 +17,7 @@ module.exports = {
     },
     md_addProd: (body) => {
         return new Promise((resolve, reject) => {
-            const product = [body.name, body.price, body.category, body.image]
+            const product = [body.name, body.price, body.category, body.image ? body.image : 'default.jpg']
             conn.query(`INSERT INTO tb_product (name_product, price_product, category_product, image_product) VALUES ('${product[0]}',${product[1]},'${product[2]}','${product[3]}')`, (err, result) => {
                 if (err) {
                     reject(new Error(err))
@@ -50,11 +54,11 @@ module.exports = {
     },
     md_deleteProd: (id) => {
         return new Promise((resolve, reject) => {
-            conn.query(`SELECT * FROM tb_product WHERE id_product = ${id}`, (err) => {
-                if (err) {
+            conn.query(`SELECT * FROM tb_product WHERE id_product = '${id}'`, (err, res) => {
+                if (err || res.length < 1) {
                     reject(new Error(`undefined ${id} of id product`))
                 } else {
-                    conn.query(`DELETE FROM tb_product WHERE id_product = ${id}`, (err) => {
+                    conn.query(`DELETE FROM tb_product WHERE id_product = '${id}'`, (err) => {
                         if (err) {
                             reject(new Error(err))
                         } else {
@@ -67,7 +71,7 @@ module.exports = {
     },
     md_getProdHistory: (where) => {
         return new Promise((resolve, reject) => {
-            conn.query(`SELECT id_product AS id, name_product AS name FROM tb_product ${where}`, (err, result) => {
+            conn.query(`SELECT id_product AS id, name_product AS name, price_product AS price FROM tb_product ${where}`, (err, result) => {
                 if (err) {
                     reject(new Error(err))
                 } else {
@@ -83,7 +87,7 @@ module.exports = {
                     reject(new Error(err))
                 } else {
                     if (result.length < 1) {
-                        reject(new Error(`id of product does'nt exist! don't make unique id of product!`))
+                        reject(new Error(`id of product doesn't exist! don't make unique id of product!`))
                     } else {
                         conn.query(`SELECT price_product AS price FROM tb_product WHERE id_product = '${id}'`, (err, result) => {
                             if (err) {

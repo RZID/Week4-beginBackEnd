@@ -5,9 +5,9 @@ module.exports = {
             const searcher = search ? search : ''
             const orderer = order ? order : ''
             const limiter = limit ? limit : ''
-            conn.query(`SELECT *, UNIX_TIMESTAMP(date_history) AS date_history FROM tb_history ${searcher} ${limiter} ${orderer}`, (err, res) => {
+            conn.query(`SELECT id_history AS invoice, UNIX_TIMESTAMP(date_history) AS date, cashier_history AS cashier, product_history AS product, amount_history AS amount FROM tb_history ${searcher} ${orderer} ${limiter}`, (err, res) => {
                 if (err) {
-                    reject(new Err(err))
+                    reject(new Error(err))
                 } else {
                     resolve(res)
                 }
