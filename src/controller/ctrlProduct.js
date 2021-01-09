@@ -56,12 +56,18 @@ module.exports = {
     updateProd: (req, res) => {
         const id = req.params.id
         const data = req.body
+        if (!id) {
+            return res.json({ Error: "ID must be filled!" })
+        }
         md_updateProd(id, data).then((resolve) => {
             res.json(resolve)
         }).catch(err => res.json(err.message))
     },
     deleteProd: (req, res) => {
         const id = req.params.id
+        if (!id) {
+            return res.json({ Error: "ID must be filled!" })
+        }
         md_deleteProd(id).then((resolve) => {
             res.json(resolve)
         }).catch(err => res.json({ Error: err.message }))

@@ -59,14 +59,15 @@ module.exports = {
                 } else {
                     if (res.length < 1) {
                         reject(new Error(`ID ${data.id} isn't exist!`))
+                    } else {
+                        conn.query(`UPDATE tb_category SET name_category = '${data.name}' WHERE id_category = '${data.id}' `, (err) => {
+                            if (err) {
+                                reject(new Error(err))
+                            } else {
+                                resolve({ Updated: data.id })
+                            }
+                        })
                     }
-                    conn.query(`UPDATE tb_category SET name_category = '${data.name}' WHERE id_category = '${data.id}' `, (err) => {
-                        if (err) {
-                            reject(new Error(err))
-                        } else {
-                            resolve({ Updated: data.id })
-                        }
-                    })
                 }
             })
         })

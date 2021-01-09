@@ -29,11 +29,10 @@ module.exports = {
         }).catch(err => res.json({ Error: err.message }))
     },
     addHistory: async (req, res) => {
-        if (!req.body.cashier || !req.body.product) {
+        const body = req.body
+        if (!body.cashier || !body.product) {
             res.json({ Error: `You must fill all of input!` })
         } else {
-            const body = req.body
-
             // Array of product container
             let arrProduct = []
             // Array of amount container
@@ -45,7 +44,6 @@ module.exports = {
 
             // Looping for get product detail of orders
             for (let element of arrOfUniqueProduct) {
-
                 await md_getProdHistory(`WHERE id_product = ${element}`).then(resolve => {
                     if (resolve.length < 1) {
                         return res.json({ Error: `Undefined id: ${element} in id of product! Don't make any creative ID in there` })

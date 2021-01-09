@@ -25,8 +25,8 @@ module.exports = {
     updateCategory: (req, res) => {
         const name = req.body.name
         const id = req.params.id
-        if (!name) {
-            res.json({ Error: "Name must be filled!" })
+        if (!name || !id) {
+            res.json({ Error: "Name and ID must be filled!" })
         } else {
             const data = { name: name, id: id }
             md_updateCategory(data).then(result => {

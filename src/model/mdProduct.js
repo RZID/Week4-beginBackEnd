@@ -22,7 +22,7 @@ module.exports = {
                 if (err) {
                     reject(new Error(err))
                 } else {
-                    resolve({ inserted: `${result.insertId}` })
+                    resolve({ Inserted: `${result.insertId}` })
                 }
             })
         })

@@ -10,6 +10,4 @@ route
     .patch('/product/:id', updateProd)
     .delete('/product/:id', deleteProd)
 
-
-
 module.exports = route
