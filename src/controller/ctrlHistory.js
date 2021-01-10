@@ -45,7 +45,7 @@ module.exports = {
             // Error handling for undefined id of product
             let error = false
             // From body.product filtering number and comma only, make to array and sorting the result 
-            const arrOfIdProduct = body.product.replace(/[^\d,]+/g, "").split(",").sort((a, b) => a - b)
+            const arrOfIdProduct = body.product.replace(/[^\d,]+/g, "").split(",").sort((a, b) => a - b).filter(el => el !== null && el !== "")
             // Get unique of id only
             const arrOfUniqueProduct = arrOfIdProduct.filter((val, i, self) => self.indexOf(val) === i)
 
@@ -119,16 +119,19 @@ module.exports = {
                 let arrProduct = []
                 // Array of amount container
                 let arrAmount = []
+
+                let error = false
                 // From body.product filtering number and comma only, make to array and sorting the result 
-                const arrOfIdProduct = body.product.replace(/[^\d,]+/g, "").split(",").sort((a, b) => a - b)
+                const arrOfIdProduct = body.product.replace(/[^\d,]+/g, "").split(",").sort((a, b) => a - b).filter(el => el !== null && el !== "")
                 // Get unique of id only
                 const arrOfUniqueProduct = arrOfIdProduct.filter((val, i, self) => self.indexOf(val) === i)
-
+                // return res.json(arrOfIdProduct)
                 // Looping for get product detail of orders
                 for (let element of arrOfUniqueProduct) {
                     await md_getProdHistory(`WHERE id_product = ${element}`).then(resolve => {
                         if (resolve.length < 1) {
-                            return res.json({ Error: `Undefined id: ${element} in id of product! Don't make any creative ID in there` })
+                            error = true
+                            res.json({ Error: `Undefined id: ${element} in id of product! Don't make any creative ID in there` })
                         } else {
                             arrProduct.push(`${resolve[0].name} x${arrOfIdProduct.filter(el => el.indexOf(element) > -1).length}`)
                         }
@@ -138,28 +141,31 @@ module.exports = {
                 // Looping for get summary product prices of orders
                 for (let element of arrOfIdProduct) {
                     await md_getProdHistory(`WHERE id_product = ${element}`).then(resolve => {
-                        arrAmount.push(resolve[0].price)
+                        if (resolve.length > 0) {
+                            arrAmount.push(resolve[0].price)
+                        }
                     })
                 }
                 // Result of final product to storing in DB
-                const joinedProduct = arrProduct.join(", ")
+                const joinedProduct = arrProduct.length > 0 ? arrProduct.join(", ") : ""
                 // Result of final amount to storing in DB
-                const reducedPrice = arrAmount.reduce((a, b) => a + b)
-                const objOfUpdate = {
-                    cashier: body.cashier,
-                    product: joinedProduct,
-                    amount: reducedPrice
+                const reducedPrice = arrAmount.length > 0 ? arrAmount.reduce((a, b) => a + b) : ""
+                if (!error) {
+                    const objOfUpdate = {
+                        cashier: body.cashier,
+                        product: joinedProduct,
+                        amount: reducedPrice
+                    }
+                    md_updateHistory(id, objOfUpdate)
+                        .then(
+                            resolve => {
+                                res.json({ success: `Updated in id : ${resolve}` })
+                            })
+                        .catch(err => res.json({
+                            Error: err.message
+                        }))
                 }
-                md_updateHistory(id, objOfUpdate)
-                    .then(
-                        resolve => {
-                            res.json({ success: `Updated in id : ${resolve}` })
-                        })
-                    .catch(err => res.json({
-                        Error: err.message
-                    }))
             }
-
         }
     }
 }
