@@ -27,3 +27,6 @@ Postman Documentation:
 3. Run with : 
     - `npm start-cli` if you want to run it in client mode (use node) without auto restart on every changing code
     - `npm start-dev` if you want to run it in developer mode (use `nodemon`)  every change and save it will auto restart.
+
+---
+Presentation : https://docs.google.com/presentation/d/1Dg2NQqHko-Oi3xr7F2hvlnAWzmqvhrmSuPzFyn3NEaA/edit?usp=sharing
