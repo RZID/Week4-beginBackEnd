@@ -22,8 +22,8 @@
     - `DB_PASS`   : fill with PASSWORD in your database configuration (Or leave it null if your database haven't password)
     - `DB_NAME`   : fill with the NAME OF DATABASE (Or leave it filled with `db_pos` if you isn't rename the database)
 4. Run with : 
-    - `npm start-cli` if you want to run it in client mode (use node) without auto restart on every changing code
-    - `npm start-dev` if you want to run it in developer mode (use `nodemon`)  every change and save it will auto restart.
+    - `npm run start-cli` if you want to run it in client mode (use node) without auto restart on every changing code
+    - `npm run start-dev` if you want to run it in developer mode (use `nodemon`)  every change and save it will auto restart.
 
 ---
 - Presentation : 
