@@ -1,9 +1,5 @@
 # POS (Backend) Application
 
-Postman Documentation: 
-1. Online version : https://www.getpostman.com/collections/84af7e59cbdc58479dc1
-2. Offline version : import from : `docs/[Postman]RZIDPOS_API.json`
----
 ## Modules included :
  - Body Parser
  - CORS
@@ -29,4 +25,14 @@ Postman Documentation:
     - `npm start-dev` if you want to run it in developer mode (use `nodemon`)  every change and save it will auto restart.
 
 ---
-Presentation : https://docs.google.com/presentation/d/1Dg2NQqHko-Oi3xr7F2hvlnAWzmqvhrmSuPzFyn3NEaA/edit?usp=sharing
+- Presentation : 
+  https://docs.google.com/presentation/d/1Dg2NQqHko-Oi3xr7F2hvlnAWzmqvhrmSuPzFyn3NEaA/edit?usp=sharing
+
+- Postman Documentation: 
+  1. Online version : https://www.getpostman.com/collections/84af7e59cbdc58479dc1
+  2. Offline version : import from : `docs/[Postman]RZIDPOS_API.json`
+
+- Flowchart
+  https://drive.google.com/file/d/18z5ICoggPqc0-xc31ayGGAo1xJa-Zzlr/view?usp=sharing
+---
+
