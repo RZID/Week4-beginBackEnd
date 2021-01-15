@@ -46,9 +46,10 @@ module.exports = {
             let error = false
             // From body.product filtering number and comma only, make to array and sorting the result 
             const arrOfIdProduct = body.product.replace(/[^\d,]+/g, "").split(",").sort((a, b) => a - b).filter(el => el !== null && el !== "")
+            [1, 1, 2, 2, 4, 4]
             // Get unique of id only
             const arrOfUniqueProduct = arrOfIdProduct.filter((val, i, self) => self.indexOf(val) === i)
-
+            [1, 2, 4]
             // Looping for get product detail of orders
             for (let element of arrOfUniqueProduct) {
                 await md_getProdHistory(`WHERE id_product = ${element}`).then(resolve => {

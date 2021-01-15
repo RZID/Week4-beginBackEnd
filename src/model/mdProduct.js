@@ -6,7 +6,7 @@ module.exports = {
         limiter = limiter ? limiter : ""
         const join = `LEFT JOIN tb_category ON id_category = category_product`
         return new Promise((resolve, reject) => {
-            conn.query(`SELECT id_product AS 'id', name_product AS 'name', price_product AS 'price', image_product AS 'image', name_category AS 'category' FROM tb_product ${join} ${where} ${order} ${limiter}`, (err, result) => {
+            conn.query(`SELECT id_product AS 'id', name_product AS 'name', price_product AS 'priceOriginal', price_product AS 'price', image_product AS 'image', name_category AS 'category' FROM tb_product ${join} ${where} ${order} ${limiter}`, (err, result) => {
                 if (err) {
                     reject(new Error(err))
                 } else {

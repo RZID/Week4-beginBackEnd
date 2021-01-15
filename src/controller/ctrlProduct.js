@@ -5,11 +5,11 @@ module.exports = {
         // If isset query searchLike in URL
         const search = req.query.searchLike ? `WHERE name_product LIKE '%${req.query.searchLike}%'` : ``
         // If in body, key order exist
-        const order = req.body.order ? `ORDER BY ${req.body.order}_product ${req.body.orderMethod}` : ``
+        const order = req.query.order ? `ORDER BY ${req.query.order}_product ${req.query.orderMethod}` : ``
         // Pagination, if in query isset page the value will set to query page, else set to 1
         const page = req.query.page ? req.query.page : 1
         // Limit, if in body key limit exist, the valu will set to body.limit, else set to 3
-        const limit = req.body.limit ? req.body.limit : 3
+        const limit = req.query.limit ? req.query.limit : 3
         // Offset, if page equal to 1, the offset will be start at 0 in limit key of array
         const offset = page === 1 ? 0 : (page - 1) * limit
         const limiter = `LIMIT ${offset},${limit}`
