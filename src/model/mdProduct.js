@@ -1,12 +1,23 @@
 const conn = require("../config/database")
 module.exports = {
+    md_getCountProd: (where) => {
+        return new Promise((resolve, reject) => {
+            conn.query(`SELECT COUNT(*) FROM tb_product ${where}`, (err, res) => {
+                if (err) {
+                    reject(new Error(err))
+                } else {
+                    resolve(res)
+                }
+            })
+        })
+    },
     md_getProd: (where, order, limiter) => {
         where = where ? where : ""
         order = order ? order : ""
         limiter = limiter ? limiter : ""
         const join = `LEFT JOIN tb_category ON id_category = category_product`
         return new Promise((resolve, reject) => {
-            conn.query(`SELECT id_product AS 'id', name_product AS 'name', price_product AS 'priceOriginal', price_product AS 'price', image_product AS 'image', name_category AS 'category' FROM tb_product ${join} ${where} ${order} ${limiter}`, (err, result) => {
+            conn.query(`SELECT id_product AS 'id', name_product AS 'name', price_product AS 'price', image_product AS 'image', name_category AS 'category' , category_product AS 'category_id' FROM tb_product ${join} ${where} ${order} ${limiter}`, (err, result) => {
                 if (err) {
                     reject(new Error(err))
                 } else {
@@ -17,7 +28,7 @@ module.exports = {
     },
     md_addProd: (body) => {
         return new Promise((resolve, reject) => {
-            const product = [body.name, body.price, body.category, body.image ? body.image : 'default.jpg']
+            const product = [body.name, body.price, body.category, body.image ? body.image : '/assets/images/default.jpg']
             conn.query(`INSERT INTO tb_product (name_product, price_product, category_product, image_product) VALUES ('${product[0]}',${product[1]},'${product[2]}','${product[3]}')`, (err, result) => {
                 if (err) {
                     reject(new Error(err))
@@ -55,17 +66,13 @@ module.exports = {
     md_deleteProd: (id) => {
         return new Promise((resolve, reject) => {
             conn.query(`SELECT * FROM tb_product WHERE id_product = '${id}'`, (err, res) => {
-                if (err || res.length < 1) {
-                    reject(new Error(`undefined ${id} of id product`))
-                } else {
-                    conn.query(`DELETE FROM tb_product WHERE id_product = '${id}'`, (err) => {
-                        if (err) {
-                            reject(new Error(err))
-                        } else {
-                            resolve({ deleted: `${id}` })
-                        }
-                    })
-                }
+                conn.query(`DELETE FROM tb_product WHERE id_product = '${id}'`, (err) => {
+                    if (err) {
+                        reject(new Error(err))
+                    } else {
+                        resolve({ deleted: `${id}` })
+                    }
+                })
             })
         })
     },

@@ -1,11 +1,23 @@
 const conn = require("../config/database")
 module.exports = {
-    md_getHistory: (search, order, limit) => {
+    md_getAllHistory: (search) => {
+        return new Promise((resolve, reject) => {
+            conn.query(`SELECT COUNT(*) FROM tb_history ${search}`, (err, res) => {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve(res[0]['COUNT(*)'])
+                }
+            })
+        })
+    },
+    md_getHistory: (search, order, limit, date) => {
         return new Promise((resolve, reject) => {
             const searcher = search ? search : ''
             const orderer = order ? order : ''
             const limiter = limit ? limit : ''
-            conn.query(`SELECT id_history AS invoice, UNIX_TIMESTAMP(date_history) AS date, cashier_history AS cashier, product_history AS product, amount_history AS amount FROM tb_history ${searcher} ${orderer} ${limiter}`, (err, res) => {
+            const separate = search && date ? ' AND ' : ''
+            conn.query(`SELECT id_history AS invoice, UNIX_TIMESTAMP(date_history) AS date,UNIX_TIMESTAMP(date_history) AS date_number, cashier_history AS cashier, product_history AS product, amount_history AS amount FROM tb_history ${date} ${separate} ${searcher} ${orderer} ${limiter}`, (err, res) => {
                 if (err) {
                     reject(new Error(err))
                 } else {
@@ -58,7 +70,6 @@ module.exports = {
                     data.product ? arrayData.product_history = data.product : ''
                     data.amount ? arrayData.amount_history = data.amount : ''
                     conn.query(`UPDATE tb_history SET ? WHERE id_history = ?`, [arrayData, id], (err) => {
-
                         if (err) {
                             reject(new Error(err))
                         } else {

@@ -5,6 +5,7 @@ const bodyParser = require('body-parser')
 const routeProduct = require("./src/router/routeProduct")
 const routeCategory = require("./src/router/routeCategory")
 const routeHistory = require("./src/router/routeHistory")
+const routeUser = require("./src/router/routeUser")
 
 const app = express()
 app.use(cors())
@@ -13,6 +14,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(routeProduct)
 app.use(routeCategory)
 app.use(routeHistory)
+app.use(routeUser)
 
 app.listen(process.env.PORT, cors(), () => {
     console.log(`Service running on port ${process.env.PORT}`)

@@ -28,7 +28,7 @@ module.exports = {
                         if (err) {
                             reject(new Error(err))
                         } else {
-                            resolve({ id })
+                            resolve(`Success deleting ${id} Of Category!`)
                         }
                     })
                 }
@@ -37,37 +37,23 @@ module.exports = {
     },
     md_addCategory: (data) => {
         return new Promise((resolve, reject) => {
-            if (!data.name) {
-                reject(new Error("Name of category is not defined"))
-            } else {
-                const capitalize = textHelper.upperCasing(data.name)
-                conn.query(`INSERT INTO tb_category (name_category) VALUES ('${capitalize}')`, (err, res) => {
-                    if (err) {
-                        reject(new Error(err))
-                    } else {
-                        resolve({ success: `category added as id = ${res.insertId}` })
-                    }
-                })
-            }
+            const capitalize = textHelper.upperCasing(data.name)
+            conn.query(`INSERT INTO tb_category (name_category) VALUES ('${capitalize}')`, (err, res) => {
+                if (err) {
+                    reject(new Error(err))
+                } else {
+                    resolve(`category added as id = ${res.insertId}`)
+                }
+            })
         })
     },
     md_updateCategory: (data) => {
         return new Promise((resolve, reject) => {
-            conn.query(`SELECT id_category FROM tb_category WHERE id_category = '${data.id}'`, (err, res) => {
+            conn.query(`UPDATE tb_category SET name_category = '${data.name}' WHERE id_category = '${data.id}' `, (err) => {
                 if (err) {
                     reject(new Error(err))
                 } else {
-                    if (res.length < 1) {
-                        reject(new Error(`ID ${data.id} isn't exist!`))
-                    } else {
-                        conn.query(`UPDATE tb_category SET name_category = '${data.name}' WHERE id_category = '${data.id}' `, (err) => {
-                            if (err) {
-                                reject(new Error(err))
-                            } else {
-                                resolve({ Updated: data.id })
-                            }
-                        })
-                    }
+                    resolve(`Data on ID (${data.id}) Updated!`)
                 }
             })
         })
