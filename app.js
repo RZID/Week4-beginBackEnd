@@ -10,11 +10,12 @@ const routeUser = require("./src/router/routeUser")
 const app = express()
 app.use(cors())
 app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.urlencoded({ extended: true }))
 app.use(routeProduct)
 app.use(routeCategory)
 app.use(routeHistory)
 app.use(routeUser)
+app.use('/image', express.static('./public/imageProduct'))
 
 app.listen(process.env.PORT, cors(), () => {
     console.log(`Service running on port ${process.env.PORT}`)

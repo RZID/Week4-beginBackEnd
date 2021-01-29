@@ -1,5 +1,17 @@
 const conn = require("../config/database")
 module.exports = {
+    md_getProd_rds: () => {
+        const join = `LEFT JOIN tb_category ON id_category = category_product`
+        return new Promise((resolve, reject) => {
+            conn.query(`SELECT id_product AS 'id', name_product AS 'name', price_product AS 'price', image_product AS 'image', name_category AS 'category' , category_product AS 'category_id' FROM tb_product ${join}`, (err, result) => {
+                if (err) {
+                    reject(new Error(err))
+                } else {
+                    resolve(result)
+                }
+            })
+        })
+    },
     md_getCountProd: (where) => {
         return new Promise((resolve, reject) => {
             conn.query(`SELECT COUNT(*) FROM tb_product ${where}`, (err, res) => {
@@ -33,7 +45,7 @@ module.exports = {
                 if (err) {
                     reject(new Error(err))
                 } else {
-                    resolve({ Inserted: `${result.insertId}` })
+                    resolve({ inserted: `${result.insertId}` })
                 }
             })
         })

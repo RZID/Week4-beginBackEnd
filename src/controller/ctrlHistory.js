@@ -1,25 +1,35 @@
-const { md_getHistory, md_addHistory, md_deleteHistory, md_updateHistory, md_getAllHistory } = require("../model/mdHistory")
+const { md_getHistory, md_addHistory, md_deleteHistory, md_updateHistory, md_getAllHistory, md_getHistory_rds } = require("../model/mdHistory")
 const { md_getProdHistory } = require("../model/mdProduct")
 const { month } = require("../helper/helperText")
 const responser = require("../helper/helperResponse")
+const htmlspecialchars = require('htmlspecialchars')
+const redisClient = require('../config/redis')
 
 module.exports = {
+    redisHistory: (req, res) => {
+        md_getHistory_rds().then((response) => {
+            const resToText = JSON.stringify(response)
+            redisClient.set('dataHistory', resToText)
+        }).catch((err) => {
+            responser.internalError(res, err.message)
+        })
+    },
     getHistory: async (req, res) => {
         try {
             const countRow = await md_getAllHistory()
             // Ternary of searching query
-            const search = req.query.where && req.query.whereVal ? `WHERE ${req.query.where}_history like '%${req.query.whereVal}%'` : ''
-            const date = req.query.betweenStart && req.query.betweenEnd ? `WHERE UNIX_TIMESTAMP(date_history) >= ${req.query.betweenStart} AND UNIX_TIMESTAMP(date_history) <= ${req.query.betweenEnd}` : ''
+            const search = htmlspecialchars(req.query.where) && htmlspecialchars(req.query.whereVal) ? `WHERE ${htmlspecialchars(req.query.where)}_history like '%${htmlspecialchars(req.query.whereVal)}%'` : ''
+            const date = htmlspecialchars(req.query.betweenStart) && htmlspecialchars(req.query.betweenEnd) ? `WHERE UNIX_TIMESTAMP(date_history) >= ${htmlspecialchars(req.query.betweenStart)} AND UNIX_TIMESTAMP(date_history) <= ${htmlspecialchars(req.query.betweenEnd)}` : ''
             // Ternary of ordering to uppercase
 
             const countFilteredRow = await md_getAllHistory(date)
-            const reOrder = req.query.orderMethod ? req.query.orderMethod.toUpperCase() : ""
+            const reOrder = htmlspecialchars(req.query.orderMethod) ? htmlspecialchars(req.query.orderMethod.toUpperCase()) : ""
             // Ternary of ordering query
-            const order = req.query.orderBy && reOrder == "ASC" || reOrder == "DESC" ? `ORDER BY ${req.query.orderBy}_history ${reOrder}` : ''
+            const order = htmlspecialchars(req.query.orderBy) && reOrder == "ASC" || reOrder == "DESC" ? `ORDER BY ${htmlspecialchars(req.query.orderBy)}_history ${reOrder}` : ''
             // Ternary of current page
-            const page = req.query.page ? req.query.page : 1
+            const page = htmlspecialchars(req.query.page) ? htmlspecialchars(req.query.page) : 1
             // Limit, if in body key limit exist, the valu will set to body.limit, else set to 3
-            const limit = req.query.limit ? req.query.limit : ''
+            const limit = htmlspecialchars(req.query.limit) ? htmlspecialchars(req.query.limit) : ''
             // Offset, if page equal to 1, the offset will be start at 0 in limit key of array
             const offset = page === 1 ? 0 : (page - 1) * limit
             // Ternary of limit query
@@ -35,20 +45,25 @@ module.exports = {
                     el.date = `${getDate} ${getMonth} ${getYear}`
                 })
                 if (resolve.length <= 0) {
-                    res.json(responser.noContent())
+                    responser.noContent(res)
                 } else {
-                    res.json(responser.success(resolve, page, countRow, limit, countFilteredRow))
+                    // Set redis for caching
+                    module.exports.redisHistory()
+                    responser.success(res, resolve, page, countRow, limit, countFilteredRow)
                 }
-            }).catch(err => res.json(responser.internalError(err.message)))
+            }).catch(err => responser.internalError(res, err.message))
         } catch (err) {
-            responser.internalError(err)
+            responser.internalError(res, err)
         }
     },
     addHistory: async (req, res) => {
         try {
             const body = req.body
+            let data = {}
+            data.cashier = htmlspecialchars(body.cashier)
+            data.product = htmlspecialchars(body.product)
             if (!body.cashier || !body.product) {
-                res.json(responser.inputError('You must fill all of input!'))
+                responser.inputError(res, 'You must fill all of input!')
             } else {
                 // Array of product container
                 let arrProduct = []
@@ -57,7 +72,7 @@ module.exports = {
                 // Error handling for undefined id of product
                 let error = false
                 // From body.product filtering number and comma only, make to array and sorting the result 
-                const arrOfIdProduct = body.product.replace(/[^\d,]+/g, "").split(",").sort((a, b) => a - b).filter(el => el !== null && el !== "")
+                const arrOfIdProduct = data.product.replace(/[^\d,]+/g, "").split(",").sort((a, b) => a - b).filter(el => el !== null && el !== "")
                 // Get unique of id only
                 const arrOfUniqueProduct = arrOfIdProduct.filter((val, i, self) => self.indexOf(val) === i)
                 // Looping for get product detail of orders
@@ -67,7 +82,7 @@ module.exports = {
                             // Set Error
                             error = true
                             // Return Error for undefined in response
-                            res.json(responser.inputError(`Undefined id ${element} in Product! don't make any creative for ID of Product!`))
+                            responser.inputError(res, `Undefined id ${element} in Product! don't make any creative for ID of Product!`)
                         } else {
                             // Push to array of object
                             arrProduct.push(`${resolve[0].name} x${arrOfIdProduct.filter(el => el.indexOf(element) > -1).length}`)
@@ -88,43 +103,47 @@ module.exports = {
                 // Result of final amount to storing in DB
                 const reducedPrice = arrAmount.length > 0 ? (arrAmount.reduce((a, b) => a + b) + arrAmount.reduce((a, b) => a + b) / 10) : ""
                 if (!error) {
-                    md_addHistory(body.cashier, joinedProduct, reducedPrice)
-                        .then(resolve => { res.json(responser.success(`Inserted in id : ${resolve}`)) }).catch(err => res.json(responser.internalError(err.message)))
+                    // Set redis for caching
+                    module.exports.redisHistory()
+                    md_addHistory(data.cashier, joinedProduct, reducedPrice)
+                        .then(resolve => { responser.success(res, `Inserted in id : ${resolve}`) }).catch(err => responser.internalError(res, err.message))
                 }
             }
         } catch (err) {
-            res.json(responser.internalError(err))
+            responser.internalError(res, err)
         }
     },
     deleteHistory: (req, res) => {
         try {
             if (!req.params.id) {
-                res.json(responser.inputError("ID must be filled!"))
+                responser.inputError(res, "ID must be filled!")
             } else {
-                md_deleteHistory(req.params.id).then(resolve => {
-                    res.json(responser.success(resolve))
-                }).catch(err => res.json(responser.internalError(err.message)))
+                md_deleteHistory(htmlspecialchars(req.params.id)).then(resolve => {
+                    // Set redis for caching
+                    module.exports.redisHistory()
+                    responser.success(res, resolve)
+                }).catch(err => responser.internalError(res, err.message))
             }
         } catch (err) {
-            res.json(responser.internalError(err))
+            responser.internalError(res, err)
         }
     },
     updateHistory: async (req, res) => {
         try {
-            const body = req.body
+            const body = htmlspecialchars(req.body)
             if (!body.cashier && !body.product) {
-                res.json(responser.inputError('You must fill one or all of input!'))
+                responser.inputError(res, 'You must fill one or all of input!')
             } else {
-                const id = req.params.id
-                id ? id : res.json(responser.inputError('ID Must be filled!'))
+                const id = htmlspecialchars(req.params.id)
+                id ? id : responser.inputError(res, 'ID Must be filled!')
                 // If only cashier
                 if (!body.product) {
                     md_updateHistory(id, { cashier: body.cashier })
                         .then(
                             resolve => {
-                                res.json(responser.success(`Updated in id : ${resolve}`))
+                                responser.success(res, `Updated in id : ${resolve}`)
                             })
-                        .catch(err => res.json(responser.internalError(err.message)))
+                        .catch(err => responser.internalError(res, err.message))
                 } else {
                     // If Product isset
                     let arrProduct = []
@@ -141,7 +160,7 @@ module.exports = {
                         await md_getProdHistory(`WHERE id_product = ${element}`).then(resolve => {
                             if (resolve.length < 1) {
                                 error = true
-                                res.json(responser.inputError(`Undefined id: ${element} in id of product! Don't make any creative ID in there`))
+                                responser.inputError(res, `Undefined id: ${element} in id of product! Don't make any creative ID in there`)
                             } else {
                                 arrProduct.push(`${resolve[0].name} x${arrOfIdProduct.filter(el => el.indexOf(element) > -1).length}`)
                             }
@@ -169,14 +188,16 @@ module.exports = {
                         md_updateHistory(id, objOfUpdate)
                             .then(
                                 resolve => {
-                                    res.json(responser.success(`Updated in id : ${resolve}`))
+                                    // Set redis for caching
+                                    module.exports.redisHistory()
+                                    responser.success(res, `Updated in id : ${resolve}`)
                                 })
-                            .catch(err => res.json(responser.internalError(err.message)))
+                            .catch(err => responser.internalError(res, err.message))
                     }
                 }
             }
         } catch (err) {
-            res.json(responser.internalError(err))
+            responser.internalError(res, err)
         }
     }
 }

@@ -1,33 +1,35 @@
 const jwt = require('jsonwebtoken')
+const responser = require('../helperResponse')
 module.exports = {
     authentication: (req, res, next) => {
         const headers = req.headers
         if (!headers.token) {
-            // ERROR
+            responser.unauthenticated(res)
         } else {
-            jwt.verify(headers.token, process.env.JWT_SECRET, (err, res) => {
+            jwt.verify(headers.token, process.env.JWT_SECRET, (err, decoded) => {
                 if (err) {
-                    // ERROR
+                    responser.unauthenticated(res)
                 } else {
+                    res.roleAccess = decoded.role
                     next()
                 }
             })
         }
     },
     authAdmin: (req, res, next) => {
-        const access = res.userAccess
-        if (access === 0) {
+        const role = res.roleAccess
+        if (role === 1) {
             next()
         } else {
-            // Error
+            responser.notAllowed(res, "You're not allowed to access this method")
         }
     },
     authCashier: (req, res, next) => {
-        const access = res.userAccess
-        if (access === 1) {
+        const role = res.roleAccess
+        if (role === 2) {
             next()
         } else {
-            // Error
+            responser.notAllowed(res, "You're not allowed to access this method")
         }
     }
 }

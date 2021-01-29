@@ -1,5 +1,16 @@
 const conn = require("../config/database")
 module.exports = {
+    md_getHistory_rds: () => {
+        return new Promise((resolve, reject) => {
+            conn.query(`SELECT id_history AS invoice, UNIX_TIMESTAMP(date_history) AS date,UNIX_TIMESTAMP(date_history) AS date_number, cashier_history AS cashier, product_history AS product, amount_history AS amount FROM tb_history`, (err, res) => {
+                if (err) {
+                    reject(new Error(err))
+                } else {
+                    resolve(res)
+                }
+            })
+        })
+    },
     md_getAllHistory: (search) => {
         return new Promise((resolve, reject) => {
             conn.query(`SELECT COUNT(*) FROM tb_history ${search}`, (err, res) => {

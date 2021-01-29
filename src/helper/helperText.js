@@ -1,6 +1,7 @@
 module.exports = {
     upperCasing: (text) => {
-        return text.charAt(0).toUpperCase() + text.slice(1)
+        text = text.toLowerCase().split(' ')
+        return text.map(el => el.charAt(0).toUpperCase() + el.substring(1)).join(' ')
     },
     month: (id) => {
         const month = [

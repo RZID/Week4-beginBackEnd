@@ -1,21 +1,41 @@
 const bcrypt = require('bcrypt')
 const { mdRegister, mdCheckEmail } = require('../model/mdUser')
 const responser = require('../helper/helperResponse')
+const jwt = require('jsonwebtoken')
+const htmlspecialchars = require('htmlspecialchars')
 
 module.exports = {
     login: (req, res) => {
-        const body = req.body
-        mdCheckEmail(body.email).then(async (response) => {
-            // Pengecekan Email
+        let body = req.body
+        body.email = htmlspecialchars(body.email)
+        body.password = htmlspecialchars(body.password)
+        mdCheckEmail(body.email).then(async (result) => {
+            if (result.length === 1) {
+                const checkingPass = await bcrypt.compare(body.password, result[0].password_user)
+                if (checkingPass) {
+                    const userData = {
+                        id: result[0].id_user,
+                        email: result[0].email_user,
+                        role: result[0].access_user
+                    }
+                    // Signing Token
+                    const tokenization = jwt.sign(userData, process.env.JWT_SECRET)
+                    responser.accepted(res, "Success Login", tokenization)
+                } else {
+                    responser.notAccept(res, "You've entered wrong password!")
+                }
+            } else {
+                responser.notAccept(res, `E-Mail that you've entered is'nt registered yet`)
+            }
         }).catch(err => {
-            // Error
+            responser.internalError(res, err.message)
         })
     },
     register: (req, res) => {
-        const body = req.body
+        const body = htmlspecialchars(req.body)
         mdCheckEmail(body.email).then(async (response) => {
             if (response.length >= 1) {
-                res.json({ err: 'USER IS REGISTERED!' })
+                responser.conflict(res, 'User already exsist!')
             } else {
                 const salt = await bcrypt.genSalt()
                 const password = await bcrypt.hash(body.password, salt)
@@ -25,10 +45,12 @@ module.exports = {
                     access_user: body.access,
                     password_user: password
                 }
-                mdRegister(user).then(response => res.json(responser.success(response))).catch(err => res.json(responser.internalError(err.message)))
+                mdRegister(user).then(async (response) => {
+                    responser.created(res, `Registered at ID = ${response.insertId}`)
+                }).catch(err => (responser.internalError(res, err.message)))
             }
         }).catch(err => {
-            res.json(err.message)
+            responser.internalError(res, err.message)
         })
     }
 }

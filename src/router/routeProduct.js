@@ -2,13 +2,14 @@ const express = require('express')
 const route = express.Router()
 
 const { getProd, addProd, updateProd, deleteProd, getProdDetail } = require('../controller/ctrlProduct')
-const { authentication, authAdmin, authCashier } = require('../helper/middleware/auth')
+const { authentication, authAdmin } = require('../helper/middleware/auth')
+const { singleUpload } = require('../helper/middleware/upload')
 const { product: redisProduct } = require('../helper/redis/product')
 route
-    .get('/product', authentication, authAdmin, getProd)                    // Khusus Admin
-    .get('/productDetail/:id', authentication, authCashier, getProdDetail)  // Khusus Kasir
-    .post('/product', authentication, addProd)                              // Semua Akses Wajib Login
-    .patch('/product/:id', authentication, updateProd)                      // Semua Akses Wajib Login
-    .delete('/product/:id', authentication, deleteProd)                     // Semua Akses Wajib Login
+    .get('/product', authentication, redisProduct, getProd)                                 // Admin Dan Kasir
+    .get('/productDetail/:id', authentication, getProdDetail)                               // Admin Dan Kasir
+    .post('/product', authentication, authAdmin, singleUpload, addProd)                     // Khusus Admin
+    .patch('/product/:id', authentication, authAdmin, singleUpload, updateProd)             // Khusus Admin
+    .delete('/product/:id', authentication, authAdmin, deleteProd)                          // Khusus Admin
 
 module.exports = route

@@ -5,7 +5,7 @@ module.exports = {
     },
     mdCheckEmail: (email) => {
         return new Promise((resolve, reject) => {
-            conn.query(`SELECT * FROM tb_user WHERE email_user = '${email}'`, (err, res) => {
+            conn.query(`SELECT * FROM tb_user LEFT JOIN tb_role ON tb_user.access_user = tb_role.id_role WHERE email_user = '${email}'`, (err, res) => {
                 if (err) {
                     reject(new Error(err))
                 } else {

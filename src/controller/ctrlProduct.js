@@ -1,21 +1,28 @@
-const { md_getProd, md_addProd, md_updateProd, md_deleteProd, md_getCountProd } = require("../model/mdProduct")
-const redistClient = require('../config/redis')
-// const { toRupiah } = require("../helper/helperCurrency")
+const { md_getProd_rds, md_getProd, md_addProd, md_updateProd, md_deleteProd, md_getCountProd } = require("../model/mdProduct")
+const { upperCasing } = require('../helper/helperText')
+const redisClient = require('../config/redis')
 const responser = require("../helper/helperResponse")
+const htmlspecialchars = require('htmlspecialchars')
+const fs = require('fs')
 module.exports = {
-    setRedistData: () => {
-
+    redistProduct: () => {
+        md_getProd_rds().then((response) => {
+            const resToText = JSON.stringify(response)
+            redisClient.set('dataProduct', resToText)
+        }).catch((err) => {
+            responser.internalError(res, err.message)
+        })
     },
     getProd: async (req, res) => {
         try {
             // If isset query searchLike in URL
-            const search = req.query.searchLike ? `WHERE name_product LIKE '%${req.query.searchLike}%'` : ``
+            const search = htmlspecialchars(req.query.searchLike) ? `WHERE name_product LIKE '%${htmlspecialchars(req.query.searchLike)}%'` : ``
             // If in body, key order exist
-            const order = req.query.order ? `ORDER BY ${req.query.order}_product ${req.query.orderMethod}` : ``
+            const order = htmlspecialchars(req.query.order) ? `ORDER BY ${htmlspecialchars(req.query.order)}_product ${htmlspecialchars(req.query.orderMethod)}` : ``
             // Pagination, if in query isset page the value will set to query page, else set to 1
-            const page = req.query.page ? req.query.page : 1
+            const page = htmlspecialchars(req.query.page) ? htmlspecialchars(req.query.page) : 1
             // Limit, if in body key limit exist, the valu will set to body.limit, else set to 3
-            const limit = req.query.limit ? req.query.limit : 6
+            const limit = htmlspecialchars(req.query.limit) ? htmlspecialchars(req.query.limit) : 6
             // Offset, if page equal to 1, the offset will be start at 0 in limit key of array
             const offset = page === 1 ? 0 : (page - 1) * limit
             const limiter = limit ? `LIMIT ${offset},${limit}` : ''
@@ -24,88 +31,154 @@ module.exports = {
             // Join Table Category
             md_getProd(search, order, limiter).then((resolve) => {
                 if (resolve.length <= 0) {
-                    res.json(responser.noContent())
+                    responser.noContent(res)
                 } else {
-                    res.json(responser.success(resolve, page, getAll, limit, getAllFiltered))
+                    // Send to redis for caching
+                    module.exports.redistProduct()
+                    responser.success(res, resolve, page, getAll, limit, getAllFiltered)
                 }
-            }).catch((err) => res.json(responser.internalError(err.message)))
+            }).catch((err) => responser.internalError(res, err.message))
         } catch (err) {
-            res.json(responser.internalError(err))
+            responser.internalError(res, err)
         }
     },
     getProdDetail: (req, res) => {
         try {
             if (!req.params.id) {
-                res.json(responser.inputError({ Error: "ID must be inserted in URL Params!" }))
+                responser.inputError(res, "ID must be inserted in URL Params!")
             } else {
-                const whereClause = `WHERE id_product = '${req.params.id}'`
+                const whereClause = `WHERE id_product = '${htmlspecialchars(req.params.id)}'`
                 md_getProd(whereClause).then((result) => {
                     if (result.length < 1) {
-                        res.json(responser.noContent())
+                        responser.noContent(res)
                     } else {
                         md_getProd(whereClause).then((resolve) => {
-                            res.json(responser.success(resolve))
-                        }).catch(err => res.json(responser.internalError(err.message)))
+                            responser.success(res, resolve)
+                        }).catch(err => responser.internalError(res, err.message))
                     }
-                }).catch(err => res.json(responser.internalError(err.message)))
+                }).catch(err => responser.internalError(res, err.message))
             }
         } catch (err) {
-            res.json(responser.internalError(err))
+            responser.internalError(res, err)
         }
 
     },
     addProd: (req, res) => {
         try {
-            const data = req.body
-            if (!data.name || !data.price || !data.category) {
-                res.json(responser.inputError('You must fill all of input!'))
+            const body = req.body
+            if (!body.name || !body.price || !body.category) {
+                responser.inputError(res, 'You must fill all of input!')
+                if (req.file) {
+                    const beforeImage = req.file.filename
+                    const path = `${process.cwd()}/public/imageProduct/${beforeImage}` // * CWD is Current Working Directory (which is root folder)
+                    // Process delete
+                    fs.unlink(path, (err) => {
+                        // if error, throw error
+                        if (err) {
+                            responser.internalError(res, err)
+                        }
+                    })
+                }
             } else {
+                let data = {}
+                data.name = upperCasing(htmlspecialchars(body.name))
+                data.price = htmlspecialchars(body.price)
+                data.category = htmlspecialchars(body.category)
+                // Push file name if exist by spread operator
+                data = { ...data, image: !req.file ? null : htmlspecialchars(req.file.filename) }
                 md_addProd(data).then((resolve) => {
-                    res.json(responser.success(resolve))
+                    // Send to redis for caching
+                    module.exports.redistProduct()
+                    responser.success(res, resolve)
                 }).catch((err) => {
                     const message = err.message.split(" ")
                     if (message[19] == "REFERENCES") {
-                        res.json(responser.inputError('Identity of category isn\'t exist!'))
+                        responser.inputError(res, 'Identity of category isn\'t exist!')
                     } else {
-                        res.json(responser.internalError(err.message))
+                        responser.internalError(res, err.message)
                     }
                 })
             }
         } catch (err) {
-            responser.internalError(err)
+            responser.internalError(res, err.message)
+            if (req.file) {
+                const beforeImage = req.file.filename
+                const path = `${process.cwd()}/public/imageProduct/${beforeImage}` // * CWD is Current Working Directory (which is root folder)
+                // Process delete
+                fs.unlink(path, (err) => {
+                    // if error, throw error
+                    if (err) {
+                        responser.internalError(res, err)
+                    }
+                })
+            }
         }
     },
     updateProd: (req, res) => {
         try {
-            const id = req.params.id
-            const data = req.body
+            const id = htmlspecialchars(req.params.id)
+            const body = req.body
             if (!id) {
-                return res.json(responser.inputError('ID must be filled!'))
+                return responser.inputError(res, 'ID must be filled!')
             }
+            let data = {}
+            data.name = htmlspecialchars(body.name)
+            data.price = htmlspecialchars(body.price)
+            data.category = htmlspecialchars(body.category)
+            // If client input the file
+            if (req.file) {
+                // Set image key in obj data to the name of uploaded image
+                data.image = htmlspecialchars(req.file.filename)
+                // First we delete the file attached in product image 
+                md_getProd(`WHERE id_product=${id}`).then((resolve) => {
+                    const beforeImage = resolve[0].image
+                    const path = `${process.cwd()}/public/imageProduct/${beforeImage}` // * CWD is Current Working Directory (which is root folder)
+                    // Process delete
+                    fs.unlink(path, (err) => {
+                        // if error, throw error
+                        if (err) {
+                            responser.internalError(res, err)
+                        }
+                    })
+                }).catch(err => responser.internalError(res, err.message))
+            }
+            // Then update new data
             md_updateProd(id, data).then((resolve) => {
-                res.json(responser.success(resolve))
-            }).catch(err => res.json(responser.internalError(err.message)))
+                module.exports.redistProduct()  // Send to redis for caching
+                responser.success(res, resolve)
+            }).catch(err => responser.internalError(res, err.message))
         } catch (err) {
-            res.json(responser.internalError(err))
+            responser.internalError(res, err.message)
         }
     },
     deleteProd: (req, res) => {
         try {
-            const id = req.params.id
+            const id = htmlspecialchars(req.params.id)
             if (!id) {
-                res.json(responser.inputError("ID must be filled!"))
+                responser.inputError(res, "ID must be filled!")
             }
             md_getProd(`WHERE id_product = ${id}`).then((resolve) => {
                 if (resolve.length <= 0) {
-                    res.json(responser.inputError(`Undefined ID (${id}) Of Product!`))
+                    responser.inputError(res, `Undefined ID (${id}) Of Product!`)
                 } else {
+                    md_getProd(`WHERE id_product='${id}'`).then((resolve) => {
+                        const beforeImage = resolve[0].image
+                        const path = `${process.cwd()}/public/imageProduct/${beforeImage}`
+                        fs.unlink(path, (err) => {
+                            if (err) {
+                                responser.internalError(err => err)
+                            }
+                        })
+                    }).catch(err => responser.internalError(res, err.message))
                     md_deleteProd(id).then((resolve) => {
-                        res.json(responser.success(resolve))
-                    }).catch(err => res.json(responser.internalError(err.message)))
+                        // Send to redis for caching
+                        module.exports.redistProduct()
+                        responser.success(res, resolve)
+                    }).catch(err => responser.internalError(res, err.message))
                 }
-            }).catch(err => res.json(responser.internalError(err.message)))
+            }).catch(err => responser.internalError(res, err.message))
         } catch (err) {
-            res.json(responser.internalError(err))
+            responser.internalError(res, err)
         }
     }
 }
