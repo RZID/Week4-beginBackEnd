@@ -4,6 +4,7 @@ const redisClient = require('../config/redis')
 const responser = require("../helper/helperResponse")
 const htmlspecialchars = require('htmlspecialchars')
 const fs = require('fs')
+const _ = require('lodash')
 module.exports = {
     redistProduct: () => {
         md_getProd_rds().then((response) => {
@@ -15,14 +16,15 @@ module.exports = {
     },
     getProd: async (req, res) => {
         try {
+            const searchBy = req.query.searchBy ? `${htmlspecialchars(req.query.searchBy)}_product` : 'name_product'
             // If isset query searchLike in URL
-            const search = htmlspecialchars(req.query.searchLike) ? `WHERE name_product LIKE '%${htmlspecialchars(req.query.searchLike)}%'` : ``
+            const search = htmlspecialchars(req.query.searchLike) ? `WHERE ${searchBy} LIKE '%${htmlspecialchars(req.query.searchLike)}%'` : ``
             // If in body, key order exist
             const order = htmlspecialchars(req.query.order) ? `ORDER BY ${htmlspecialchars(req.query.order)}_product ${htmlspecialchars(req.query.orderMethod)}` : ``
             // Pagination, if in query isset page the value will set to query page, else set to 1
-            const page = htmlspecialchars(req.query.page) ? htmlspecialchars(req.query.page) : 1
+            const page = htmlspecialchars(req.query.page) ? _.toNumber(htmlspecialchars(req.query.page)) : 1
             // Limit, if in body key limit exist, the valu will set to body.limit, else set to 3
-            const limit = htmlspecialchars(req.query.limit) ? htmlspecialchars(req.query.limit) : 6
+            const limit = htmlspecialchars(req.query.limit) ? _.toNumber(htmlspecialchars(req.query.limit)) : 6
             // Offset, if page equal to 1, the offset will be start at 0 in limit key of array
             const offset = page === 1 ? 0 : (page - 1) * limit
             const limiter = limit ? `LIMIT ${offset},${limit}` : ''
@@ -126,11 +128,14 @@ module.exports = {
             data.price = htmlspecialchars(body.price)
             data.category = htmlspecialchars(body.category)
             // If client input the file
+            // Set image key in obj data to the name of uploaded image
             if (req.file) {
-                // Set image key in obj data to the name of uploaded image
                 data.image = htmlspecialchars(req.file.filename)
-                // First we delete the file attached in product image 
-                md_getProd(`WHERE id_product=${id}`).then((resolve) => {
+            }
+
+            // First we delete the file attached in product image 
+            md_getProd(`WHERE id_product=${id}`).then((resolve) => {
+                if (resolve.length > 0) {
                     const beforeImage = resolve[0].image
                     const path = `${process.cwd()}/public/imageProduct/${beforeImage}` // * CWD is Current Working Directory (which is root folder)
                     // Process delete
@@ -140,8 +145,8 @@ module.exports = {
                             responser.internalError(res, err)
                         }
                     })
-                }).catch(err => responser.internalError(res, err.message))
-            }
+                }
+            }).catch(err => responser.internalError(res, err.message))
             // Then update new data
             md_updateProd(id, data).then((resolve) => {
                 module.exports.redistProduct()  // Send to redis for caching
@@ -163,12 +168,14 @@ module.exports = {
                 } else {
                     md_getProd(`WHERE id_product='${id}'`).then((resolve) => {
                         const beforeImage = resolve[0].image
-                        const path = `${process.cwd()}/public/imageProduct/${beforeImage}`
-                        fs.unlink(path, (err) => {
-                            if (err) {
-                                responser.internalError(err => err)
-                            }
-                        })
+                        if (beforeImage) {
+                            const path = `${process.cwd()}/public/imageProduct/${beforeImage}`
+                            fs.unlink(path, (err) => {
+                                if (err) {
+                                    responser.internalError(res, err)
+                                }
+                            })
+                        }
                     }).catch(err => responser.internalError(res, err.message))
                     md_deleteProd(id).then((resolve) => {
                         // Send to redis for caching

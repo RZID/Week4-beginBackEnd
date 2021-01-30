@@ -40,7 +40,7 @@ module.exports = {
     },
     md_addProd: (body) => {
         return new Promise((resolve, reject) => {
-            const product = [body.name, body.price, body.category, body.image ? body.image : '/assets/images/default.jpg']
+            const product = [body.name, body.price, body.category, body.image ? body.image : '']
             conn.query(`INSERT INTO tb_product (name_product, price_product, category_product, image_product) VALUES ('${product[0]}',${product[1]},'${product[2]}','${product[3]}')`, (err, result) => {
                 if (err) {
                     reject(new Error(err))

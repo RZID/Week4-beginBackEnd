@@ -29,7 +29,7 @@ module.exports = {
             // Ternary of current page
             const page = htmlspecialchars(req.query.page) ? htmlspecialchars(req.query.page) : 1
             // Limit, if in body key limit exist, the valu will set to body.limit, else set to 3
-            const limit = htmlspecialchars(req.query.limit) ? htmlspecialchars(req.query.limit) : ''
+            const limit = htmlspecialchars(req.query.limit) ? _.toNumber(htmlspecialchars(req.query.limit)) : 10
             // Offset, if page equal to 1, the offset will be start at 0 in limit key of array
             const offset = page === 1 ? 0 : (page - 1) * limit
             // Ternary of limit query
