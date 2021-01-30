@@ -6,6 +6,9 @@ const routeProduct = require("./src/router/routeProduct")
 const routeCategory = require("./src/router/routeCategory")
 const routeHistory = require("./src/router/routeHistory")
 const routeUser = require("./src/router/routeUser")
+const Moment = require("moment")
+Moment().tz(process.env.TZ)
+
 
 const app = express()
 app.use(cors())
