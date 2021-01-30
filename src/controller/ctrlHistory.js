@@ -103,10 +103,12 @@ module.exports = {
                 // Result of final amount to storing in DB
                 const reducedPrice = arrAmount.length > 0 ? (arrAmount.reduce((a, b) => a + b) + arrAmount.reduce((a, b) => a + b) / 10) : ""
                 if (!error) {
-                    // Set redis for caching
-                    module.exports.redisHistory()
                     md_addHistory(data.cashier, joinedProduct, reducedPrice)
-                        .then(resolve => { responser.success(res, `Inserted in id : ${resolve}`) }).catch(err => responser.internalError(res, err.message))
+                        .then(resolve => {
+                            // Set redis for caching
+                            module.exports.redisHistory()
+                            responser.success(res, `Inserted in id : ${resolve}`)
+                        }).catch(err => responser.internalError(res, err.message))
                 }
             }
         } catch (err) {
