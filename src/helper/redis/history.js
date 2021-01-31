@@ -33,7 +33,7 @@ module.exports = {
 
                     // Searching Query
                     if (search && searchBy) {
-                        filtered = _.filter(data, (el) =>
+                        filtered = _.filter(filtered, (el) =>
                             el[searchBy].toString().toLowerCase().indexOf(search.toLowerCase()) > -1
                         )
                     }
