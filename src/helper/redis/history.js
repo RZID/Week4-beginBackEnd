@@ -50,7 +50,7 @@ module.exports = {
                     dataLimited = limiter   // Limited data
                     _.map(dataLimited, el => el.date = Moment.unix(el.date).format('DD MMMM YYYY'))
                     // Response()
-                    if (dataLimited > 0) {
+                    if (dataLimited.length > 0) {
                         responser.success(res, dataLimited, page, data.length, limit, filtered.length)
                     } else {
                         responser.noContent(res)
