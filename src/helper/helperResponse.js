@@ -12,7 +12,7 @@ module.exports = {
             statusCode: 200,
             statusMsg: "OK",
             data: {
-                now: Moment().format(),
+                now: Moment.format(),
                 page: page,
                 totalRows: totalRows,
                 filteredData: filtered,
