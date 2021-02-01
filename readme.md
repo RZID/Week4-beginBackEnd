@@ -6,6 +6,7 @@
  - DotEnv
  - ExpressJS
  - MySQL2
+ - 
 
  ## Dev Modules :
 - ESLint
@@ -21,13 +22,15 @@
     - `DB_USER`   : fill with USERNAME in your database configuration
     - `DB_PASS`   : fill with PASSWORD in your database configuration (Or leave it null if your database haven't password)
     - `DB_NAME`   : fill with the NAME OF DATABASE (Or leave it filled with `db_pos` if you isn't rename the database)
+    - `JWT_SECRET`   : fill with the unique value due to signature verifier on JWT
+    - `TZ` : fill in your current time zone in your area
 4. Run with : 
     - `npm run start-cli` if you want to run it in client mode (use node) without auto restart on every changing code
     - `npm run start-dev` if you want to run it in developer mode (use `nodemon`)  every change and save it will auto restart.
 
 ---
 - Presentation : 
-  https://docs.google.com/presentation/d/1Dg2NQqHko-Oi3xr7F2hvlnAWzmqvhrmSuPzFyn3NEaA/edit?usp=sharing
+  https://docs.google.com/presentation/d/1auvDwaUJ-HIYhTpZHlU2kuStVt-r8BJCZYfJ91YRJuE/edit?usp=sharing
 
 - Postman Documentation: 
   1. Online version : https://www.getpostman.com/collections/84af7e59cbdc58479dc1
