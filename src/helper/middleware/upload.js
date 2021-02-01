@@ -32,18 +32,22 @@ const multerUpload = multer({
 
 const singleUpload = (req, res, next) => {
     const multerSingle = multerUpload.single('productImage')
-    multerSingle(req, res, (err) => {
-        if (err) {
-            if (err.code === 'LIMIT_FILE_SIZE') {
-                return responser.tooLarge(res, `The file size is too large, please enter the file under ${limiterSize}MB`)
-            } else if (err.code === 'notMatchType') {
-                return responser.notAccept(res, err.message)
+    if (multerSingle) {
+        multerSingle(req, res, (err) => {
+            if (err) {
+                if (err.code === 'LIMIT_FILE_SIZE') {
+                    return responser.tooLarge(res, `The file size is too large, please enter the file under ${limiterSize}MB`)
+                } else if (err.code === 'notMatchType') {
+                    return responser.notAccept(res, err.message)
+                } else {
+                    return responser.internalError(res, err)
+                }
             } else {
-                return responser.internalError(res, err)
+                next()
             }
-        } else {
-            next()
-        }
-    })
+        })
+    } else {
+        next()
+    }
 }
 module.exports = { singleUpload }
