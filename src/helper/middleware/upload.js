@@ -35,11 +35,11 @@ const singleUpload = (req, res, next) => {
     multerSingle(req, res, (err) => {
         if (err) {
             if (err.code === 'LIMIT_FILE_SIZE') {
-                res.json(responser.tooLarge(`The file size is too large, please enter the file under ${limiterSize}MB`))
+                return responser.tooLarge(res, `The file size is too large, please enter the file under ${limiterSize}MB`)
             } else if (err.code === 'notMatchType') {
-                res.json(responser.notAccept(err.message))
+                return responser.notAccept(res, err.message)
             } else {
-                res.json(responser.internalError(err))
+                return responser.internalError(res, err)
             }
         } else {
             next()

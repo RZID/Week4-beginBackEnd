@@ -1,4 +1,3 @@
-const Moment = require('moment')
 module.exports = {
     noContent: (res) => {
         return res.json({
