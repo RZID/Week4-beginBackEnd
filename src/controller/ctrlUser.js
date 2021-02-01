@@ -38,6 +38,7 @@ module.exports = {
         const body = htmlspecialchars(req.body)
         mdCheckEmail(body.email).then(async (response) => {
             if (response.length >= 1) {
+                console.log(response)
                 return responser.conflict(res, 'User already exsist!')
             } else {
                 const salt = await bcrypt.genSalt()
