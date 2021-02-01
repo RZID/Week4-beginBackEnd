@@ -142,7 +142,9 @@ module.exports = {
                     if (beforeImage && beforeImage !== 'default.jpg') {
                         const path = `${process.cwd()}/public/imageProduct/${beforeImage}` // * CWD is Current Working Directory (which is root folder)
                         // Process delete
-                        fs.unlink(path)
+                        fs.unlink(path, err => {
+                            responser.internalError(res, err)
+                        })
                     }
                 }
             }).catch(err => responser.internalError(res, err.message))
