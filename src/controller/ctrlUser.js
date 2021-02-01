@@ -35,18 +35,17 @@ module.exports = {
         })
     },
     register: (req, res) => {
-        const body = htmlspecialchars(req.body)
-        mdCheckEmail(body.email).then(async (response) => {
+        const body = req.body
+        mdCheckEmail(htmlspecialchars(body.email)).then(async (response) => {
             if (response.length >= 1) {
-                console.log(response)
                 return responser.conflict(res, 'User already exsist!')
             } else {
                 const salt = await bcrypt.genSalt()
                 const password = await bcrypt.hash(body.password, salt)
                 const user = {
-                    name_user: body.name,
-                    email_user: body.email,
-                    access_user: body.access,
+                    name_user: htmlspecialchars(body.name),
+                    email_user: htmlspecialchars(body.email),
+                    access_user: htmlspecialchars(body.access),
                     password_user: password
                 }
                 mdRegister(user).then(async (response) => {
