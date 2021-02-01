@@ -87,7 +87,7 @@ module.exports = {
                 data.price = htmlspecialchars(body.price)
                 data.category = htmlspecialchars(body.category)
                 // Push file name if exist by spread operator
-                data = { ...data, image: !req.file ? null : htmlspecialchars(req.file.filename) }
+                data = { ...data, image: !req.file ? 'default.jpg' : htmlspecialchars(req.file.filename) }
                 md_addProd(data).then((resolve) => {
                     // Send to redis for caching
                     module.exports.redistProduct()
@@ -131,20 +131,24 @@ module.exports = {
             // Set image key in obj data to the name of uploaded image
             if (req.file) {
                 data.image = htmlspecialchars(req.file.filename)
+            } else {
+                data.image = "default.jpg"
             }
 
             // First we delete the file attached in product image 
             md_getProd(`WHERE id_product=${id}`).then((resolve) => {
                 if (resolve.length > 0) {
                     const beforeImage = resolve[0].image
-                    const path = `${process.cwd()}/public/imageProduct/${beforeImage}` // * CWD is Current Working Directory (which is root folder)
-                    // Process delete
-                    fs.unlink(path, (err) => {
-                        // if error, throw error
-                        if (err) {
-                            responser.internalError(res, err)
-                        }
-                    })
+                    if (beforeImage && beforeImage !== 'default.jpg') {
+                        const path = `${process.cwd()}/public/imageProduct/${beforeImage}` // * CWD is Current Working Directory (which is root folder)
+                        // Process delete
+                        fs.unlink(path, (err) => {
+                            // if error, throw error
+                            if (err) {
+                                responser.internalError(res, err)
+                            }
+                        })
+                    }
                 }
             }).catch(err => responser.internalError(res, err.message))
             // Then update new data
@@ -168,7 +172,7 @@ module.exports = {
                 } else {
                     md_getProd(`WHERE id_product='${id}'`).then((resolve) => {
                         const beforeImage = resolve[0].image
-                        if (beforeImage) {
+                        if (beforeImage && beforeImage !== "default.jpg") {
                             const path = `${process.cwd()}/public/imageProduct/${beforeImage}`
                             fs.unlink(path, (err) => {
                                 if (err) {
