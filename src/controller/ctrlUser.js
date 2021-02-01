@@ -9,6 +9,9 @@ module.exports = {
         let body = req.body
         body.email = htmlspecialchars(body.email)
         body.password = htmlspecialchars(body.password)
+        if (!body.email || !body.password) {
+            return responser.notAccept(res, "E-Mail and Password Must Be Entered!")
+        }
         mdCheckEmail(body.email).then(async (result) => {
             if (result.length === 1) {
                 const checkingPass = await bcrypt.compare(body.password, result[0].password_user)
@@ -35,7 +38,7 @@ module.exports = {
         const body = htmlspecialchars(req.body)
         mdCheckEmail(body.email).then(async (response) => {
             if (response.length >= 1) {
-                responser.conflict(res, 'User already exsist!')
+                return responser.conflict(res, 'User already exsist!')
             } else {
                 const salt = await bcrypt.genSalt()
                 const password = await bcrypt.hash(body.password, salt)
