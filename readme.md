@@ -28,6 +28,8 @@
     - `npm run start-dev` if you want to run it in developer mode (use `nodemon`)  every change and save it will auto restart.
 
 ---
+- Demo :
+  [::Method]http://54.160.120.78:3000/<`endpoint`>
 - Presentation : 
   https://docs.google.com/presentation/d/1auvDwaUJ-HIYhTpZHlU2kuStVt-r8BJCZYfJ91YRJuE/edit?usp=sharing
 
