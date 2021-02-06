@@ -10,7 +10,7 @@ module.exports = {
                 responser.internalError(res, err)
             } else {
                 if (result) {
-                    const searchBy = req.query.searchBy ? `${htmlspecialchars(req.query.searchBy)}` : 'name'
+                    const searchBy = req.query.searchBy ? `${htmlspecialchars(req.query.searchBy)}` : null
                     // If isset query searchLike in URL
                     const search = htmlspecialchars(req.query.searchLike)
                     // If in body, key order exist
@@ -19,7 +19,7 @@ module.exports = {
                     // Pagination, if in query isset page the value will set to query page, else set to 1
                     const page = htmlspecialchars(req.query.page) ? htmlspecialchars(req.query.page) : 1
                     // Limit, if in body key limit exist, the valu will set to body.limit, else set to 3
-                    const limit = htmlspecialchars(req.query.limit) ? _.toNumber(htmlspecialchars(req.query.limit)) : 6
+                    const limit = htmlspecialchars(req.query.limit) ? _.toNumber(htmlspecialchars(req.query.limit)) : 9
                     // Offset, if page equal to 1, the offset will be start at 0 in limit key of array
                     const offset = page === 1 ? 0 : (page - 1) * limit
 
@@ -27,7 +27,7 @@ module.exports = {
                     let filtered = []
 
                     // Check if search isset, the array on top will be updated. else none
-                    if (search) {
+                    if (search && searchBy) {
                         filtered = _.filter(data, (el) =>
                             el[searchBy].toString().toLowerCase().indexOf(search.toLowerCase()) > -1
                         )

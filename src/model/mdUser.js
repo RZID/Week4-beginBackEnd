@@ -1,7 +1,15 @@
 const conn = require('../config/database')
 module.exports = {
-    mdLogin: () => {
-
+    mdRole: () => {
+        return new Promise((resolve, reject) => {
+            conn.query(`SELECT * FROM tb_role`, (err, res) => {
+                if (err) {
+                    reject(new Error(err))
+                } else {
+                    resolve(res)
+                }
+            })
+        })
     },
     mdCheckEmail: (email) => {
         return new Promise((resolve, reject) => {

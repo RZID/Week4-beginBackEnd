@@ -16,7 +16,7 @@ module.exports = {
     },
     getProd: async (req, res) => {
         try {
-            const searchBy = req.query.searchBy ? `${htmlspecialchars(req.query.searchBy)}_product` : 'name_product'
+            const searchBy = req.query.searchBy ? `${htmlspecialchars(req.query.searchBy)}_product` : null
             // If isset query searchLike in URL
             const search = htmlspecialchars(req.query.searchLike) ? `WHERE ${searchBy} LIKE '%${htmlspecialchars(req.query.searchLike)}%'` : ``
             // If in body, key order exist
@@ -24,7 +24,7 @@ module.exports = {
             // Pagination, if in query isset page the value will set to query page, else set to 1
             const page = htmlspecialchars(req.query.page) ? _.toNumber(htmlspecialchars(req.query.page)) : 1
             // Limit, if in body key limit exist, the valu will set to body.limit, else set to 3
-            const limit = htmlspecialchars(req.query.limit) ? _.toNumber(htmlspecialchars(req.query.limit)) : 6
+            const limit = htmlspecialchars(req.query.limit) ? _.toNumber(htmlspecialchars(req.query.limit)) : 9
             // Offset, if page equal to 1, the offset will be start at 0 in limit key of array
             const offset = page === 1 ? 0 : (page - 1) * limit
             const limiter = limit ? `LIMIT ${offset},${limit}` : ''
@@ -74,12 +74,14 @@ module.exports = {
                     const beforeImage = req.file.filename
                     const path = `${process.cwd()}/public/imageProduct/${beforeImage}` // * CWD is Current Working Directory (which is root folder)
                     // Process delete
-                    fs.unlink(path, (err) => {
-                        // if error, throw error
-                        if (err) {
-                            responser.internalError(res, err)
-                        }
-                    })
+                    if (fs.existsSync(path)) {
+                        fs.unlink(path, (err) => {
+                            // if error, throw error
+                            if (err) {
+                                responser.internalError(res, err)
+                            }
+                        })
+                    }
                 }
             } else {
                 let data = {}
@@ -107,12 +109,14 @@ module.exports = {
                 const beforeImage = req.file.filename
                 const path = `${process.cwd()}/public/imageProduct/${beforeImage}` // * CWD is Current Working Directory (which is root folder)
                 // Process delete
-                fs.unlink(path, (err) => {
-                    // if error, throw error
-                    if (err) {
-                        responser.internalError(res, err)
-                    }
-                })
+                if (fs.existsSync(path)) {
+                    fs.unlink(path, (err) => {
+                        // if error, throw error
+                        if (err) {
+                            responser.internalError(res, err)
+                        }
+                    })
+                }
             }
         }
     },
@@ -131,10 +135,7 @@ module.exports = {
             // Set image key in obj data to the name of uploaded image
             if (req.file) {
                 data.image = htmlspecialchars(req.file.filename)
-            } else {
-                data.image = "default.jpg"
             }
-
             // First we delete the file attached in product image 
             md_getProd(`WHERE id_product=${id}`).then((resolve) => {
                 if (resolve.length > 0) {
@@ -142,9 +143,13 @@ module.exports = {
                     if (beforeImage && beforeImage !== 'default.jpg') {
                         const path = `${process.cwd()}/public/imageProduct/${beforeImage}` // * CWD is Current Working Directory (which is root folder)
                         // Process delete
-                        fs.unlink(path, err => {
-                            responser.internalError(res, err)
-                        })
+                        if (fs.existsSync(path)) {
+                            fs.unlink(path, err => {
+                                if (err) {
+                                    responser.internalError(res, err)
+                                }
+                            })
+                        }
                     }
                 }
             }).catch(err => responser.internalError(res, err.message))
@@ -152,7 +157,9 @@ module.exports = {
             md_updateProd(id, data).then((resolve) => {
                 module.exports.redistProduct()  // Send to redis for caching
                 responser.success(res, resolve)
-            }).catch(err => responser.internalError(res, err.message))
+            }).catch(err => {
+                responser.internalError(res, err.message)
+            })
         } catch (err) {
             responser.internalError(res, err.message)
         }
@@ -171,11 +178,13 @@ module.exports = {
                         const beforeImage = resolve[0].image
                         if (beforeImage && beforeImage !== "default.jpg") {
                             const path = `${process.cwd()}/public/imageProduct/${beforeImage}`
-                            fs.unlink(path, (err) => {
-                                if (err) {
-                                    responser.internalError(res, err)
-                                }
-                            })
+                            if (fs.existsSync(path)) {
+                                fs.unlink(path, (err) => {
+                                    if (err) {
+                                        responser.internalError(res, err)
+                                    }
+                                })
+                            }
                         }
                     }).catch(err => responser.internalError(res, err.message))
                     md_deleteProd(id).then((resolve) => {
