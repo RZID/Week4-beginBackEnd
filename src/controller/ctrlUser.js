@@ -14,22 +14,19 @@ module.exports = {
         }
         mdCheckEmail(body.email).then(async (result) => {
             if (result.length === 1) {
-                if (result[0].isActive_user != 1) {
-                    return responser.notAccept(res, "Account is'nt activated! Contact your admin first!")
-                } else {
-                    const checkingPass = await bcrypt.compare(body.password, result[0].password_user)
-                    if (checkingPass) {
-                        const userData = {
-                            id: result[0].id_user,
-                            email: result[0].email_user,
-                            role: result[0].access_user
-                        }
-                        // Signing Token
-                        const tokenization = jwt.sign(userData, process.env.JWT_SECRET)
-                        responser.accepted(res, "Success Login", tokenization, result[0].name_user, userData.role)
-                    } else {
-                        responser.notAccept(res, "You've entered wrong password!")
+
+                const checkingPass = await bcrypt.compare(body.password, result[0].password_user)
+                if (checkingPass) {
+                    const userData = {
+                        id: result[0].id_user,
+                        email: result[0].email_user,
+                        role: result[0].access_user
                     }
+                    // Signing Token
+                    const tokenization = jwt.sign(userData, process.env.JWT_SECRET)
+                    responser.accepted(res, "Success Login", tokenization, result[0].name_user, userData.role)
+                } else {
+                    responser.notAccept(res, "You've entered wrong password!")
                 }
             } else {
                 responser.notAccept(res, `E-Mail that you've entered is'nt registered yet`)

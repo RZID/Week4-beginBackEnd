@@ -32,7 +32,6 @@ const multerUpload = multer({
 
 const singleUpload = (req, res, next) => {
     const multerSingle = multerUpload.single('productImage')
-    console.log(multerSingle)
     if (multerSingle) {
         multerSingle(req, res, (err) => {
             if (err) {

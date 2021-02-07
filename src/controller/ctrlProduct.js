@@ -135,24 +135,25 @@ module.exports = {
             // Set image key in obj data to the name of uploaded image
             if (req.file) {
                 data.image = htmlspecialchars(req.file.filename)
-            }
-            // First we delete the file attached in product image 
-            md_getProd(`WHERE id_product=${id}`).then((resolve) => {
-                if (resolve.length > 0) {
-                    const beforeImage = resolve[0].image
-                    if (beforeImage && beforeImage !== 'default.jpg') {
-                        const path = `${process.cwd()}/public/imageProduct/${beforeImage}` // * CWD is Current Working Directory (which is root folder)
-                        // Process delete
-                        if (fs.existsSync(path)) {
-                            fs.unlink(path, err => {
-                                if (err) {
-                                    responser.internalError(res, err)
-                                }
-                            })
+
+                // First we delete the file attached in product image 
+                md_getProd(`WHERE id_product=${id}`).then((resolve) => {
+                    if (resolve.length > 0) {
+                        const beforeImage = resolve[0].image
+                        if (beforeImage && beforeImage !== 'default.jpg') {
+                            const path = `${process.cwd()}/public/imageProduct/${beforeImage}` // * CWD is Current Working Directory (which is root folder)
+                            // Process delete
+                            if (fs.existsSync(path)) {
+                                fs.unlink(path, err => {
+                                    if (err) {
+                                        responser.internalError(res, err)
+                                    }
+                                })
+                            }
                         }
                     }
-                }
-            }).catch(err => responser.internalError(res, err.message))
+                }).catch(err => responser.internalError(res, err.message))
+            }
             // Then update new data
             md_updateProd(id, data).then((resolve) => {
                 module.exports.redistProduct()  // Send to redis for caching
