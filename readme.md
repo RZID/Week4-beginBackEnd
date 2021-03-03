@@ -29,7 +29,7 @@
 
 ---
 - Demo :
-  [::Method]http://54.160.120.78:3000/<`endpoint`>
+  [::Method]http://54.84.168.198/<`endpoint`>
 - Presentation : 
   https://docs.google.com/presentation/d/1auvDwaUJ-HIYhTpZHlU2kuStVt-r8BJCZYfJ91YRJuE/edit?usp=sharing
 
